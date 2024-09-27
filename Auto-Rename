@@ -1,0 +1,56 @@
+import pandas as pd
+import os
+import shutil
+
+# Read the CSV file
+csv_path = r"CSV PATH"
+df = pd.read_csv(csv_path)
+
+# Ensure that 'Image name' and 'product_id' are converted to strings (if necessary)
+df['Image name'] = df['Image name'].astype(str)
+df['product_id'] = df['product_id'].astype(str)
+
+# Add columns for image file paths
+df['Image_file_jpg'] = df['Image name'] + '.jpg'
+df['Image_file_png'] = df['Image name'] + '.png'
+df['Image_file_jpeg'] = df['Image name'] + '.jpeg'
+df['Image_file_php'] = df['Image name'] + '.php'
+df['source_direct'] = r"C:\Users\a.abd.3\Downloads\MM DLP\Ori"
+df['destination_direct'] = r"C:\Users\a.abd.3\Downloads\MM DLP\Edited"
+
+# Ensure the destination directory exists
+if not os.path.exists(df['destination_direct'][0]):
+    os.makedirs(df['destination_direct'][0])
+
+# Function to copy and rename image
+def copy_and_rename_image(src_file, dest_dir, new_name_base):
+    dest_file = os.path.join(dest_dir, os.path.basename(src_file))
+    # Copy the file
+    shutil.copy(src_file, dest_file)
+    # Rename the file
+    new_file_name = os.path.join(dest_dir, new_name_base + '.jpg')
+    # Check if the new file name already exists
+    if os.path.exists(new_file_name):
+        # Handle the conflict (e.g., by appending a suffix)
+        base, ext = os.path.splitext(new_file_name)
+        counter = 1
+        while os.path.exists(new_file_name):
+            new_file_name = f"{base}_{counter}{ext}"
+            counter += 1
+    os.rename(dest_file, new_file_name)
+
+# Loop through the DataFrame and copy files
+for i in range(len(df)):
+    src_dir = df['source_direct'][i]
+    dest_dir = df['destination_direct'][i]
+    
+    # Check for .jpg file first
+    src_file_jpg = os.path.join(src_dir, df['Image_file_jpg'][i])
+    src_file_png = os.path.join(src_dir, df['Image_file_png'][i])
+    
+    if os.path.exists(src_file_jpg):
+        copy_and_rename_image(src_file_jpg, dest_dir, df['product_id'][i])
+    elif os.path.exists(src_file_png):
+        copy_and_rename_image(src_file_png, dest_dir, df['product_id'][i])
+    else:
+        print(f"Image not found for: {df['Image name'][i]}")
